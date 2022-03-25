@@ -72,7 +72,7 @@ impl TryFrom<u16> for Instruction {
                 0x6 => Self::SHR(x, y),
                 0x7 => Self::SUBN(x, y),
                 0xE => Self::SHL(x, y),
-                _ => return Err("illegal arithmetic operation".into()),
+                _ => return Err(Error::IllegalOpcode { opcode }),
             },
             0x9 => Self::SNE(x, y),
             0xA => Self::LDI(nnn),
@@ -82,7 +82,7 @@ impl TryFrom<u16> for Instruction {
             0xE => match kk {
                 0x9E => Self::SKP(x),
                 0xA1 => Self::SKNP(x),
-                _ => return Err("illegal input instruction".into()),
+                _ => return Err(Error::IllegalOpcode { opcode }),
             },
             0xF => match kk {
                 0x07 => Self::LDVxDT(x),
@@ -94,9 +94,9 @@ impl TryFrom<u16> for Instruction {
                 0x33 => Self::LDBVx(x),
                 0x55 => Self::LDIVx(x),
                 0x65 => Self::LDVxI(x),
-                _ => return Err("illegal opcode sub-kind".into()),
+                _ => return Err(Error::IllegalOpcode { opcode }),
             }
-            _ => return Err("illegal opcode kind".into()),
+            _ => return Err(Error::IllegalOpcode { opcode }),
         })
     }
 }

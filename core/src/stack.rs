@@ -1,4 +1,4 @@
-use crate::Result;
+use crate::{Error, Result};
 
 pub struct Stack<const SIZE: usize> {
     sp: usize,
@@ -15,7 +15,7 @@ impl<const SIZE: usize> Stack<SIZE> {
 
     pub fn push(&mut self, value: usize) -> Result<()> {
         if self.sp >= SIZE {
-            return Err("stack overflow".into());
+            return Err(Error::StackOverflow);
         }
 
         self.data[self.sp] = value;
@@ -25,7 +25,7 @@ impl<const SIZE: usize> Stack<SIZE> {
 
     pub fn pop(&mut self) -> Result<usize> {
         if self.sp == 0 {
-            return Err("stack underflow".into());
+            return Err(Error::StackUnderflow);
         }
 
         self.sp -= 1;
