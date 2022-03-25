@@ -7,9 +7,8 @@ use sdl2::event::Event;
 use sdl2::keyboard::{Keycode, Mod};
 
 use core::{Emulator, Error, Display};
-use frontend::{create_audio_device, SquareWave};
 
-const WINDOW_TITLE: &str = "CHIP-8";
+const WINDOW_TITLE: &str = "CHIP-8 Emulator";
 const WINDOW_SIZE: u32 = 15;
 const WIDTH: u32 = 64;
 const HEIGHT: u32 = 32;
@@ -49,26 +48,27 @@ fn run(filename: &str) -> Result<(), Error> {
 
     emulator.load_program(&program);
 
-    let sdl_context = sdl2::init().unwrap();
-    let video_subsystem = sdl_context.video().unwrap();
+    let sdl_context = sdl2::init()?;
+    let video_subsystem = sdl_context.video()?;
     let window = video_subsystem
         .window(WINDOW_TITLE, WIDTH * WINDOW_SIZE, HEIGHT * WINDOW_SIZE)
         .position_centered()
-        .build().unwrap();
+        .build()
+        .map_err(|e| Error::from(e.to_string()))?;
 
-    let mut canvas = window.into_canvas().present_vsync().build().unwrap();
-    let mut event_pump = sdl_context.event_pump().unwrap();
-    let audio_subsystem = sdl_context.audio().unwrap();
+    let mut canvas = window.into_canvas().present_vsync().build().map_err(|e| Error::from(e.to_string()))?;
+    let mut event_pump = sdl_context.event_pump()?;
+    let audio_subsystem = sdl_context.audio()?;
 
 
-    let audio_device = create_audio_device(&audio_subsystem).unwrap();
+    let audio_device = frontend::create_audio_device(&audio_subsystem)?;
 
-    canvas.set_scale(WINDOW_SIZE as f32, WINDOW_SIZE as f32).unwrap();
+    canvas.set_scale(WINDOW_SIZE as f32, WINDOW_SIZE as f32)?;
     canvas.present();
 
     let creator = canvas.texture_creator();
     let mut texture = creator
-        .create_texture_target(PixelFormatEnum::RGB24, WIDTH, HEIGHT).unwrap();
+        .create_texture_target(PixelFormatEnum::RGB24, WIDTH, HEIGHT).map_err(|e| Error::from(e.to_string()))?;
 
     let mut paused = false;
     let mut speed = 1.0;
