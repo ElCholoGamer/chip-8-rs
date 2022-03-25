@@ -1,44 +1,10 @@
-use sdl2::audio::{AudioCallback, AudioDevice, AudioSpecDesired};
-use sdl2::AudioSubsystem;
-use nfd::{Response,Result as NFDResult};
+use nfd::{Response, Result as NFDResult};
+use sdl2::keyboard::Keycode;
+use sdl2::pixels::Color;
 
-pub struct SquareWave {
-    phase_inc: f32,
-    phase: f32,
-    volume: f32,
-}
+use core::Display;
 
-impl AudioCallback for SquareWave {
-    type Channel = f32;
-
-    fn callback(&mut self, out: &mut [f32]) {
-        for x in out.iter_mut() {
-            *x = self.volume;
-
-            if self.phase > 0.5 {
-                *x = -*x;
-            }
-
-            self.phase = (self.phase + self.phase_inc) % 1.0;
-        }
-    }
-}
-
-pub fn create_audio_device(audio_subsystem: &AudioSubsystem) -> Result<AudioDevice<SquareWave>, String> {
-    let desired_spec = AudioSpecDesired {
-        freq: Some(44100),
-        channels: Some(1),
-        samples: None,
-    };
-
-    audio_subsystem.open_playback(None, &desired_spec, |spec| {
-        SquareWave {
-            phase_inc: 440.0 / spec.freq as f32,
-            phase: 0.0,
-            volume: 0.25,
-        }
-    })
-}
+pub mod audio;
 
 pub fn prompt_file() -> NFDResult<Option<String>> {
     let result = nfd::open_file_dialog(None, None)?;
@@ -47,5 +13,50 @@ pub fn prompt_file() -> NFDResult<Option<String>> {
         Response::Okay(filename) => Some(filename),
         Response::OkayMultiple(files) => Some(files[0].clone()),
         Response::Cancel => None,
+    })
+}
+
+pub fn update_pixel_data(display: &Display, pixel_data: &mut [u8], color: Color) -> bool {
+    let mut update = false;
+
+    for (y, &row) in display.pixel_rows().iter().enumerate() {
+        for x in 0..64 {
+            let mask = 1 << (63 - x);
+            let pixel_color = if row & mask == 0 { Color::BLACK } else { color };
+            let (r, g, b) = pixel_color.rgb();
+
+            let i = (y * 64 + x) * 3;
+
+            if pixel_data[i] != r || pixel_data[i + 1] != g || pixel_data[i + 2] != b {
+                update = true;
+                pixel_data[i + 0] = r;
+                pixel_data[i + 1] = g;
+                pixel_data[i + 2] = b;
+            }
+        }
+    }
+
+    update
+}
+
+pub fn keycode_to_key(keycode: Keycode) -> Option<u8> {
+    Some(match keycode {
+        Keycode::Num1 => 0x1,
+        Keycode::Num2 => 0x2,
+        Keycode::Num3 => 0x3,
+        Keycode::Num4 => 0xC,
+        Keycode::Q => 0x4,
+        Keycode::W => 0x5,
+        Keycode::E => 0x6,
+        Keycode::R => 0xD,
+        Keycode::A => 0x7,
+        Keycode::S => 0x8,
+        Keycode::D => 0x9,
+        Keycode::F => 0xE,
+        Keycode::Z => 0xA,
+        Keycode::X => 0x0,
+        Keycode::C => 0xB,
+        Keycode::V => 0xF,
+        _ => return None,
     })
 }
