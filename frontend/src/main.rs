@@ -1,12 +1,11 @@
 use std::time::Duration;
 use std::fs;
-use nfd::Response;
 use rand::Rng;
 use sdl2::pixels::{Color, PixelFormatEnum};
 use sdl2::event::Event;
 use sdl2::keyboard::{Keycode, Mod};
 
-use core::{Emulator, Error, Display};
+use core::{Emulator, Result, Error, Display};
 
 const WINDOW_TITLE: &str = "CHIP-8 Emulator";
 const WINDOW_SIZE: u32 = 15;
@@ -25,14 +24,7 @@ fn main() {
     let filename = if args.len() >= 2 {
         args[1].clone()
     } else {
-        let result = nfd::open_file_dialog(None, None)
-            .unwrap_or_else(|e| panic!("{}", e));
-
-        match result {
-            Response::Okay(filename) => filename,
-            Response::OkayMultiple(files) => files[0].clone(),
-            Response::Cancel => return,
-        }
+        frontend::prompt_file().unwrap_or_else(|e| panic!("{}", e)).unwrap()
     };
 
     if let Err(e) = run(&filename) {
@@ -40,14 +32,7 @@ fn main() {
     }
 }
 
-fn run(filename: &str) -> Result<(), Error> {
-    let program = fs::read(filename).map_err(|e| Error::from(e.to_string()))?;
-
-    let mut rng = rand::thread_rng();
-    let mut emulator = Emulator::new(|| rng.gen_range(0..=u8::MAX));
-
-    emulator.load_program(&program);
-
+fn run(filename: &str) -> Result<()> {
     let sdl_context = sdl2::init()?;
     let video_subsystem = sdl_context.video()?;
     let window = video_subsystem
@@ -74,6 +59,13 @@ fn run(filename: &str) -> Result<(), Error> {
     let mut speed = 1.0;
     let mut color = Color::WHITE;
     let mut pixel_data = [0; (WIDTH * HEIGHT * 3) as usize];
+
+    let mut program = fs::read(filename).unwrap();
+
+    let mut rng = rand::thread_rng();
+    let mut emulator = Emulator::new(|| rng.gen_range(0..=u8::MAX));
+
+    emulator.load_program(&program);
 
     'main: loop {
         for event in event_pump.poll_iter() {
@@ -105,6 +97,13 @@ fn run(filename: &str) -> Result<(), Error> {
                                 emulator.reset();
                                 emulator.load_program(&program);
                             }
+                            Keycode::O => {
+                                if let Ok(Some(filename)) = frontend::prompt_file() {
+                                    program = fs::read(filename).map_err(|e| Error::from(e.to_string()))?;
+                                    emulator.reset();
+                                    emulator.load_program(&program);
+                                }
+                            }
                             Keycode::Q => break 'main,
                             _ => {}
                         }
@@ -126,7 +125,7 @@ fn run(filename: &str) -> Result<(), Error> {
             emulator.cycle((CPF as f32 * speed) as u32)?;
         }
 
-        if emulator.sound_timer() > 0 {
+        if emulator.sound_timer() > 0 && !paused {
              audio_device.resume();
         } else {
             audio_device.pause();

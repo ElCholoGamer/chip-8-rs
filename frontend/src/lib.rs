@@ -1,5 +1,6 @@
 use sdl2::audio::{AudioCallback, AudioDevice, AudioSpecDesired};
 use sdl2::AudioSubsystem;
+use nfd::{Response,Result as NFDResult};
 
 pub struct SquareWave {
     phase_inc: f32,
@@ -36,5 +37,15 @@ pub fn create_audio_device(audio_subsystem: &AudioSubsystem) -> Result<AudioDevi
             phase: 0.0,
             volume: 0.25,
         }
+    })
+}
+
+pub fn prompt_file() -> NFDResult<Option<String>> {
+    let result = nfd::open_file_dialog(None, None)?;
+
+    Ok(match result {
+        Response::Okay(filename) => Some(filename),
+        Response::OkayMultiple(files) => Some(files[0].clone()),
+        Response::Cancel => None,
     })
 }
