@@ -1,5 +1,5 @@
 [package]
-name = "frontend"
+name = "chip8"
 version = "0.1.0"
 authors = ["ElCholoGamer"]
 edition = "2021"
@@ -9,5 +9,7 @@ core = { path = "../core" }
 nfd = "0.0.4"
 rand = "0.8.5"
 sdl2 = { version = "0.35.2", features = ["bundled", "static-link"] }
-gameloop = "0.2.0"
 spin_sleep = "1.1.0"
+
+[target.'cfg(windows)'.build-dependencies]
+winres = "0.1.12"

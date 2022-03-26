@@ -2,5 +2,5 @@
 
 members = [
     "core",
-    "frontend"
+    "chip8"
 ]

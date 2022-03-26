@@ -1,3 +1,5 @@
+#![windows_subsystem = "windows"]
+
 use std::time::Duration;
 use std::fs;
 use rand::Rng;
@@ -6,7 +8,7 @@ use sdl2::event::Event;
 use sdl2::keyboard::{Keycode, Mod};
 
 use core::Emulator;
-use frontend::audio;
+use chip8::audio;
 
 const WINDOW_TITLE: &str = "CHIP-8 Emulator";
 const WINDOW_SIZE: u32 = 15;
@@ -92,7 +94,7 @@ fn run(mut program: Vec<u8>) -> Result<(), String> {
                                 emulator.load_program(&program);
                             }
                             Keycode::O => {
-                                if let Ok(Some(filename)) = frontend::prompt_file() {
+                                if let Ok(Some(filename)) = chip8::prompt_file() {
                                     program = fs::read(filename).map_err(|e| e.to_string())?;
                                     emulator.reset();
                                     emulator.load_program(&program);
@@ -102,12 +104,12 @@ fn run(mut program: Vec<u8>) -> Result<(), String> {
                             Keycode::Q => break 'main,
                             _ => {}
                         }
-                    } else if let Some(key) = frontend::keycode_to_key(keycode) {
+                    } else if let Some(key) = chip8::keycode_to_key(keycode) {
                         emulator.keydown(key);
                     }
                 }
                 Event::KeyUp { keycode: Some(keycode), .. } => {
-                    if let Some(key) = frontend::keycode_to_key(keycode) {
+                    if let Some(key) = chip8::keycode_to_key(keycode) {
                         emulator.keyup(key);
                     }
                 }
@@ -126,7 +128,7 @@ fn run(mut program: Vec<u8>) -> Result<(), String> {
             audio_device.pause();
         }
 
-        if frontend::update_pixel_data(&emulator.display, &mut pixel_data, color) {
+        if chip8::update_pixel_data(&emulator.display, &mut pixel_data, color) {
             texture.update(None, &pixel_data, WIDTH as usize * 3).unwrap();
             canvas.copy(&texture, None, None).unwrap();
             canvas.present();
