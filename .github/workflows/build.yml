@@ -1,6 +1,15 @@
 name: CI
 on: [ push ]
 
+env:
+  RELEASE_BIN: chip8
+  RELEASE_DIR: artifacts
+  GITHUB_REF: '${{ github.ref }}'
+  WINDOWS_TARGET: x86_64-pc-windows-msvc
+  MACOS_TARGET: x86_64-apple-darwin
+  LINUX_AMD64_TARGET: x86_64-unknown-linux-musl
+  LINUX_ARM64_TARGET: aarch64-unknown-linux-musl
+
 jobs:
   build:
     runs-on: ${{ matrix.os }}
