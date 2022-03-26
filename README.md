@@ -8,7 +8,7 @@ Clone the repository and run `cargo build` to compile the app.
 
 ## Controls
 
-The COSMAC VIP keypad layout is mapped to the QWERTY keyboard on the keys `1234QWERASDFZXCV`.
+The COSMAC VIP keypad layout is mapped to the left side of the QWERTY keyboard:
 
 <table>
 <tr><th>COSMAC VIP keypad</th><th>QWERTY layout</th></tr>
