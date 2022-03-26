@@ -23,6 +23,7 @@ jobs:
       - name: Compile and release
         uses: rust-build/rust-build.action@latest
         env:
+          SRC_DIR: "./chip8"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RUSTTARGET: ${{ matrix.target }}
           ARCHIVE_TYPES: ${{ matrix.archive }}
