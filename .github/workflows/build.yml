@@ -97,3 +97,93 @@ jobs:
         with:
           name: ${{ matrix.target }}
           path: ./${{ env.RELEASE_DIR }}
+
+  release:
+    name: GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Query version number
+        id: get_version
+        shell: bash
+        run: |
+          echo "using version tag ${GITHUB_REF:10}"
+          echo ::set-output name=version::"${GITHUB_REF:10}"
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.get_version.outputs.VERSION }}
+          release_name: ${{ steps.get_version.outputs.VERSION }}
+
+      - name: Download Linux amd64 tarball
+        uses: actions/download-artifact@v2
+        with:
+          name: ${{ env.LINUX_AMD64_TARGET }}
+
+      - name: Download Linux arm64 tarball
+        uses: actions/download-artifact@v2
+        with:
+          name: ${{ env.LINUX_ARM64_TARGET }}
+
+      - name: Download Windows tarball
+        uses: actions/download-artifact@v2
+        with:
+          name: ${{ env.WINDOWS_TARGET }}
+
+      - name: Download MacOS tarball
+        uses: actions/download-artifact@v2
+        with:
+          name: ${{ env.MACOS_TARGET }}
+
+      - name: Release Linux amd64 tarball
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./wasm-pack-${{ steps.get_version.outputs.VERSION }}-${{ env.LINUX_AMD64_TARGET }}.tar.gz
+          asset_content_type: application/gzip
+          asset_name: wasm-pack-${{ steps.get_version.outputs.VERSION }}-${{ env.LINUX_AMD64_TARGET }}.tar.gz
+
+      - name: Release Linux arm64 tarball
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./wasm-pack-${{ steps.get_version.outputs.VERSION }}-${{ env.LINUX_ARM64_TARGET }}.tar.gz
+          asset_content_type: application/gzip
+          asset_name: wasm-pack-${{ steps.get_version.outputs.VERSION }}-${{ env.LINUX_ARM64_TARGET }}.tar.gz
+
+      - name: Release Windows tarball
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./wasm-pack-${{ steps.get_version.outputs.VERSION }}-${{ env.WINDOWS_TARGET }}.tar.gz
+          asset_content_type: application/gzip
+          asset_name: wasm-pack-${{ steps.get_version.outputs.VERSION }}-${{ env.WINDOWS_TARGET }}.tar.gz
+
+      - name: Release Windows init exe
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./wasm-pack-init.exe
+          asset_content_type: application/vnd.microsoft.portable-executable
+          asset_name: wasm-pack-init.exe
+
+      - name: Release MacOS tarball
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./wasm-pack-${{ steps.get_version.outputs.VERSION }}-${{ env.MACOS_TARGET }}.tar.gz
+          asset_content_type: application/gzip
+          asset_name: wasm-pack-${{ steps.get_version.outputs.VERSION }}-${{ env.MACOS_TARGET }}.tar.gz
